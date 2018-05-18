@@ -20,6 +20,7 @@ class TaobaoDownloaderMiddleware(object):
         self.key_words = key_words
         self.brower = None
         self.wait = None
+        self.time = None
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -31,7 +32,6 @@ class TaobaoDownloaderMiddleware(object):
         options = Options()
         options.add_argument('--headless')
         self.brower = Chrome(options=options)
-        # self.brower.maximize_window()
         self.brower.get(url)
         self.wait = WebDriverWait(self.brower, 5)
 
