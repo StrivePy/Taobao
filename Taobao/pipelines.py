@@ -28,6 +28,7 @@ class MongoPipeline(object):
         self.db = self.client[self.mongo_db]
 
     def process_item(self, item, spider):
-        condition = {'shop_name': item['shop_name']}
-        self.db[self.collection].update(condition, {'$set': item}, upsert=True)
+        # condition = {'shop_name': item['shop_name']}
+        # self.db[self.collection].update(condition, {'$set': item}, upsert=True)
+        self.db[self.collection].insert_one(dict(item))
         return item

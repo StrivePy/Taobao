@@ -29,6 +29,11 @@ class TaobaoDownloaderMiddleware(object):
         )
 
     def init_brower(self, url):
+        """
+        初始化Chrome实例，设置为无窗口模式
+        :param url:
+        :return:
+        """
         options = Options()
         options.add_argument('--headless')
         self.brower = Chrome(options=options)
@@ -36,6 +41,11 @@ class TaobaoDownloaderMiddleware(object):
         self.wait = WebDriverWait(self.brower, 5)
 
     def fetch_index(self, request):
+        """
+        请求www.taobao.com，并在输入框中输入关键字联想电脑，然后点击搜索进入索引页面
+        :param request:
+        :return:
+        """
         try:
             self.init_brower(request.url)
             keywords_inputs = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#q")))
@@ -43,53 +53,25 @@ class TaobaoDownloaderMiddleware(object):
             submit_button = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#J_TSearchForm > div.search-button > button")))
             submit_button.click()
             self.wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, "#mainsrp-pager > div > div > div > ul > li.item.active > span"), str(request.meta['pagenumber'])))
-            body = self.brower.page_source
-            page_box = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#mainsrp-pager > div > div > div > div.form > input")))
-            page_box.clear()
-            request.meta['pagenumber'] += 1
-            page_box.send_keys(str(request.meta['pagenumber']))
-            page_submit = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#mainsrp-pager > div > div > div > div.form > span.btn.J_Submit")))
-            page_submit.click()
             time.sleep(1)
-            response = HtmlResponse(url=self.brower.current_url, body=body, encoding='utf-8', request=request)
-            self.brower.close()
-            return response
-        except TimeoutException:
-            return None
-
-    def fetch_next(self, request):
-        try:
-            self.init_brower(request.url)
-            self.wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, "#mainsrp-pager > div > div > div > ul > li.item.active > span"), str(request.meta['pagenumber'])))
             body = self.brower.page_source
-            page_box = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#mainsrp-pager > div > div > div > div.form > input")))
-            page_box.clear()
-            request.meta['pagenumber'] += 1
-            page_box.send_keys(str(request.meta['pagenumber']))
-            page_submit = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#mainsrp-pager > div > div > div > div.form > span.btn.J_Submit")))
-            page_submit.click()
-            time.sleep(1)
+            request.meta['brower'] = self.brower
+            request.meta['wait'] = self.wait
             response = HtmlResponse(url=self.brower.current_url, body=body, encoding='utf-8', request=request)
-            self.brower.close()
             return response
         except TimeoutException:
             return None
 
     def process_request(self, request, spider):
-        # Called for each request that goes through the downloader
-        # middleware.
-
-        # Must either:
-        # - return None: continue processing this request
-        # - or return a Response object
-        # - or return a Request object
-        # - or raise IgnoreRequest: process_exception() methods of
-        #   installed downloader middleware will be called
+        """
+        通过index_flag过滤初始索引页的请求
+        :param request:
+        :param spider:
+        :return:
+        """
         if 'index_flag' in request.meta.keys():
             response = self.fetch_index(request)
             return response
-        elif 'next_flag' in request.meta.keys():
-            response = self.fetch_next(request)
-            return response
+
 
 
