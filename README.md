@@ -1,7 +1,6 @@
 # Scrapy+Selenium+Chrome 抓取淘宝商品详情
 
 ## 抓取思路
-
 由Spider发起请求（www.taobao.com)， 因为淘宝的商品详情是通过Ajax异步加载的，所以将该请求通过downloadmiddleware的**process_request**函数用selenium进行请求，并完成输入关键字并点击搜索动作，然后进入关键字商品的索引页，并将该索引页的**_response_**返回，供**index_parse**解析函数使用。索引页的**_response_**中包含了加载索引页selenium的**_Chrome_**实例和**_WebDriverWait_**实例，这两个实例供后续实现点击翻页的**next_page**函数使用。
 
 ## Scrapy模块详情
